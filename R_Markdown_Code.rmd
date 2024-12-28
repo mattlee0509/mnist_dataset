@@ -1,0 +1,691 @@
+---
+title: "Statistical Learning Project"
+author: "Matthew Lee"
+date: "2023-12-01"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+### 1.
+
+```{r}
+train <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/train_mnist.csv")
+test <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/test_mnist.csv")
+
+library(FNN)
+```
+
+```{r}
+set.seed(1)
+k_values <- c(1, 2, 3, 10, 100, 500, 750, 1000)
+error_rates <- numeric(length(k_values))
+i = 1
+for(k in k_values){
+  predictions <- knn(train = train[, -785], test = test[, -785], k = k, cl = train$y)
+  error_rates[i] <- mean(predictions!= test$y)
+  print(error_rates)
+  i = i+1
+
+  
+  
+}
+cat("Error Rates:", error_rates, "\n")
+plot(k_values, error_rates, type = "b", pch = 20,
+     xlab = "K Values", ylab = "Error Rate",
+     main = "Error Rate vs. K Values",
+     col = "blue")
+
+```
+
+
+
+The k values that minimize the error rate are k = 1 and k = 3. They both share an error rate of 0.049.
+
+
+```{r}
+library(e1071)
+library(caret)
+k_values <- c(1, 2, 3, 10, 100, 500, 750, 1000)
+sensitivities <- matrix(0, nrow = length(k_values), ncol = nlevels(factor(test$y)))
+for(k in k_values){
+  predictions <- knn(train = train[, -785], test = test[, -785], k = k, cl = train$y)
+
+
+confusion = confusionMatrix(data = predictions, reference = factor(test$y))
+
+}
+```
+
+```{r}
+class_0_tpr = c(0.9800, 0.9900, 0.9700, 0.9800, 0.9700, 0.9600, 0.9400, 0.9000)
+class_1_tpr = c(0.9900, 0.9900, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000, 1.0000)
+class_2_tpr = c(0.9800, 0.9900, 0.9800, 0.9600, 0.8600, 0.6800, 0.6100, 0.5700)
+class_3_tpr = c(0.9700, 0.9800, 0.9700, 0.9700, 0.9000, 0.8000, 0.7400, 0.7000)
+class_4_tpr = c(0.9300, 0.9600, 0.9600, 0.9400, 0.8400, 0.7700, 0.6800, 0.6300)
+class_5_tpr = c(0.9400, 0.9400, 0.9600, 0.9700, 0.8700, 0.6400, 0.5200, 0.4200)
+class_6_tpr = c(1.0000, 0.9700, 0.9800, 0.9700, 0.9500, 0.8600, 0.8200, 0.7800)
+class_7_tpr = c(0.9500, 0.9300, 0.9400, 0.9200, 0.8800, 0.8200, 0.8200, 0.8200)
+class_8_tpr = c(0.8500, 0.7800, 0.8500, 0.8400, 0.7900, 0.6500, 0.6400, 0.6000)
+class_9_tpr = c(0.9200, 0.8400, 0.9000, 0.8900, 0.8800, 0.8400, 0.8500, 0.8300)
+max(class_0_tpr)
+max(class_1_tpr)
+max(class_2_tpr)
+max(class_3_tpr)
+max(class_4_tpr)
+max(class_5_tpr)
+max(class_6_tpr)
+max(class_7_tpr)
+max(class_8_tpr)
+max(class_9_tpr)
+```
+#### 3.
+
+```{r}
+library(MASS)
+library(caret)
+library(ROCR)
+X_train <- as.matrix(train[, 1:784])
+y_train <- as.factor(train[, 785])
+X_test <- as.matrix(test[, 1:784])
+y_test <- as.factor(test[, 785])
+lda_model <- lda(train$y ~ ., data = train)
+lda_predictions <- predict(lda_model, newdata = data.frame(X_test))
+lda_confusion <- confusionMatrix(data = lda_predictions$class, reference = factor(test$y))
+lda_error_rate = 1 -lda_confusion$overall["Accuracy"]
+```
+```{r}
+lda_error_rate = 1 -lda_confusion$overall["Accuracy"]
+cat("LDA Error Rate:", lda_error_rate, "\n")
+```
+ Discriminant function for class j (x) = $f(x) = (x^T)(S_j^{-1})(\mu_j) - \frac{1}{2} (\mu_j^T) (S_j^T) (\mu_j) + \log(\pi_j)$
+
+all prior probabilities are equal to 0.1
+x is the vector of 784 predictors for class j
+The estimated parameters are mu and sigma for the discriminant function
+the dimension of mu is 784 x 1 vector.
+the dimension of sigma matrix is a 784x784 matrix 
+
+Prior probabilities of groups=
+
+  0   1   2   3   4   5   6   7   8   9 
+0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1
+
+Class specific True Positive Rates = 
+Class 0 = 0.9500
+Class 1 = 0.9600
+Class 2 = 0.8500
+Class 3 = 0.8700
+Class 4 = 0.9100
+Class 5 = 0.7900
+Class 6 = 0.8100
+Class 7 = 0.8200
+Class 8 = 0.7800
+Class 9 = 0.8000
+
+LDA Error Rate: 0.146 
+
+
+
+#### 4. 
+
+
+```{r}
+qda_model <- qda(train$y ~ ., data = train)
+qda_predictions <- predict(qda_model, newdata = data.frame(X_test))
+qda_confusion <- confusionMatrix(data = qda_predictions$class, reference = factor(test$y))
+qda_error_rate = 1 -qda_confusion$overall["Accuracy"]
+
+```
+```{r}
+qda_confusion
+
+cat("QDA Error Rate:", qda_error_rate, "\n")
+```
+ Discriminant function for class j (x) =   $f(x) = -\frac{1}{2} \ln |S_j| - \frac{1}{2} (\mu_j^T) (S_j^{-1}) (\mu_j) - \frac{1}{2} (x^T)(S_j^{-1})(x) + (x^T)(S_j^{-1})(\mu_j) + \ln(\pi_j)$
+
+all prior probabilities are equal to 0.1
+x is the vector of 784 predictors for class j
+The estimated parameters are mu_j, sigma matrix_ j, pi_j for the discriminant function
+the dimension of mu_j is 784 x 1 vector.
+the dimension of sigma_j matrix is a 784x784 matrix 
+
+Prior probabilities of groups=
+
+  0   1   2   3   4   5   6   7   8   9 
+0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1
+
+Class specific True Positive Rates = 
+Class 0 = 0.91
+Class 1 = 0.84   
+Class 2 = 0.94   
+Class 3 = 0.85   
+Class 4 = 0.78   
+Class 5 = 0.70   
+Class 6 = 0.86
+Class 7 = 0.82      
+Class 8 = 0.76 
+Class 9 = 0.76  
+
+LDA Error Rate: 0.178 
+
+
+
+#### 5. 
+```{r}
+library(e1071)
+library(caret)
+nb_model <- naiveBayes(train[, -785], train$y)
+nb_predictions <- predict(nb_model, newdata = test[, -785])
+nb_confusion <- confusionMatrix(data = nb_predictions, reference = y_test)
+
+
+nb_error_rate <- 1 - nb_confusion$overall["Accuracy"]
+
+
+# Print confusion matrix, error rate, and class-specific TPRs
+print(nb_confusion)
+cat("Naive Bayes Error Rate:", nb_error_rate, "\n")
+
+```
+
+In a brief description, the Class-Specific Posterior Probabilities are calculated using the Bayes theorem. P(Y = class j | All 784 x values). This probability is calculated by estimating  the P(All 784 x values | Y = class j).
+
+Class specific true positive rates = 
+
+[0.9200   0.9800   0.1600   0.4100   0.0600   0.0700   0.9400   0.4300   0.5800   0.7500]
+
+Naive Bayes Error Rate: 0.47 
+
+
+#### 6. 
+
+The best classifier is using Knn when k = 1 or 3 with an error rate of 0.046.
+
+
+
+### 2.
+```{r}
+traindf <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/train_mnist.csv")
+testdf <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/test_mnist.csv")
+idx8 <- which(traindf$y == 8)
+idx1 <- which(traindf$y == 1)
+xtrain8 <- as.matrix(traindf[idx8, 1:784])
+xtrain1 <- as.matrix(traindf[idx1, 1:784])
+id8 <- which(testdf$y == 8)
+id1 <- which(testdf$y == 1)
+xtest8 <- as.matrix(testdf[id8, 1:784])
+xtest1 <- as.matrix(testdf[id1, 1:784])
+```
+
+#### 1. 
+
+Describe the data prep-processing steps and PCA optimization problem for estimating the first two principal component (PC) scores and loadings vectors (denoted as
+ϕ1, ϕ2; aka PC directions). State the centering and scaling computations, detailing the
+sample size and dimensions of the PC scores and directions.
+
+In order to first prepare the data for PCA optimization, one must first center the data around the origin with data for digit 1 being the x axis and digit 8 being the y axis. You will subtract each mean from each point to center the data around the origin.  From there you would compute a line that fits the data by finding the slope of the line that maximizes the sum of squared distances to the origin. You would then use the slope and determine the scaling factor for each variable. Scaling each vector is done by normalizing linear combination of features. Normalized meaning that $\sum_{j=1}^{p} (\phi_{j1}^2) = 1$.Using this constraint the first principal component is the vector that solves $\maximize \frac{1}{n} \sum_{i=1}^{n} \left(\sum_{j=1}^{p} (\phi_{j1} x_{ij})^2\right)$
+
+
+#### 2. 
+```{r}
+
+pcout8 <- prcomp(xtrain8, scale = TRUE)
+
+pcout1 <- prcomp(xtrain1, scale = TRUE)
+names(pcout8)
+```
+
+The elements of pcout8 are sdev, rotation, center, and scale. 
+
+sdev - Amount of variance attributed to each principal componet
+
+Rotation - A matrix that shows the principal component loading values for each of the predictors. 
+
+Center - For each x value this represents the average of all the specific parameters for data classified as 8.
+
+Scale - This is the standard deviation of each of the predictors. 
+
+#### 3. 
+
+Center and scale are used in data pre-processing the training data by centering the data around the origin by subtracting the means from each data point. Scale is used to normalize the vectors of length one in order to control the variance. 
+
+```{r}
+xtest8_pre_processed <- scale(xtest8, center = pcout8$center, scale = pcout8$scale)
+xtest1_pre_processed <- scale(xtest1, center = pcout1$center, scale = pcout1$scale)
+```
+
+
+#### 4. 
+
+$\phi_{1}$ is nothing but the first column in the rotation matrix and so on. Geometrically $\phi_{1}$ is the vector with elements $\phi_{11}$, $\phi_{21}$, ..$\phi_{p1}$ that defines a direction which the data varies the most. Projecting n data points x1,..., xn onto this direction then you will see that the values are nothing but the principal component scores. This gives the vector for Z_1, the first principal component. For $\phi_{2}$ this is the vector that has a maximum variance that is uncorrelated with Z_1. To do this you will just constrain the direction $\phi_{2}$ to be orthogonal with $\phi_{1}$ 
+
+
+#### 5. 
+As mentioned before projecting n data points x1,..., xn onto this direction then you will see that the values are nothing but the principal component scores.
+So the relation between z_1^T and x_1^T is that if you project the x_1 data points onto the phi_1 directional vector you will get the z_1^T vector. 
+
+#### 6.
+
+pcout8$sdev is the standard deviations of the principal components. Each value represents the square roots of the eigenvalues of the covariance/correlation matrix. 
+
+#### 7. 
+
+```{r}
+
+cumulative_var8 <- cumsum(pcout8$sdev^2) / sum(pcout8$sdev^2)
+
+
+cumulative_var1 <- cumsum(pcout1$sdev^2) / sum(pcout1$sdev^2)
+
+
+plot(cumulative_var8, type = 'b', col = 'blue', pch = 16, xlab = 'Number of Principal Components', ylab = 'Cumulative Proportion of Variance Explained', main = 'Cumulative Proportion of Variance Explained by PCs')
+lines(cumulative_var1, type = 'b', col = 'red', pch = 16)
+
+
+legend('bottomright', legend = c('pcout8', 'pcout1'), col = c('blue', 'red'), pch = 16)
+
+```
+
+#### 8. 
+```{r}
+reconstructed_images8 <- list()
+reconstructed_images1 <- list()
+
+# Loop over different numbers of loadings (M)
+for (M in 1:500) {
+  loadings8 <- pcout8$rotation[, 1:M]
+  reconstructed8 <- xtest8_pre_processed[,1:M] %*% t(loadings8)
+  reconstructedRescaled8 <- (reconstructed8 *  pcout8$scale) + pcout8$center
+  reconstructed_images8[[M]] <- reconstructedRescaled8
+
+}
+
+
+```
+```{r}
+reconstruction_errors_8 <- numeric(500)
+reconstruction_errors_1 <- numeric(500)
+for (M in 1:500) {
+
+   phiM8 <- pcout8$rotation[, 1:M]
+  ztest8 <- xtest8_pre_processed %*% phiM8
+  xtest8_recon <- ztest8 %*% t(phiM8)
+
+
+  # Reconstruct images for xtest1
+  phiM1 <- pcout1$rotation[, 1:M]
+  ztest1 <- xtest1_pre_processed %*% phiM1
+  xtest1_recon <- ztest1 %*% t(phiM1)
+
+   error8 <- sum((xtest8_pre_processed - xtest8_recon)^2) / nrow(xtest8_pre_processed)
+  error1 <- sum((xtest1_pre_processed - xtest1_recon)^2) / nrow(xtest1_pre_processed)
+
+
+  reconstruction_errors_8[M] <- error8
+  reconstruction_errors_1[M] <- error1
+}
+
+# Plot the reconstruction errors
+plot(1:500, reconstruction_errors_8, type = "l", col = "blue", xlab = "Number of PCs (M)", ylab = "Reconstruction Error", main = "Reconstruction Error vs. Number of PCs")
+lines(1:500, reconstruction_errors_1, type = "l", col = "red")
+legend("topright", legend = c("xtest8", "xtest1"), col = c("blue", "red"), lty = 1)
+
+```
+
+
+For both xtest 1 and xtest8, reconstruction error decreases as number of PCs increase. But xtest1 decreases more because the geometry of the number is much simpler than 8 which is a more complex shape causing an increase in error. 
+
+
+### 3. 
+```{r}
+train <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/train_mnist.csv")
+test <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/test_mnist.csv")
+X = rbind(xtrain8, xtrain1)
+hc.comp <- hclust(dist(X), method="complete")
+hc.avg <- hclust(dist(X), method="average")
+hc.sgl <- hclust(dist(X), method="single")
+
+par(mfrow = c(1, 3))
+plot(hc.comp, main = "Complete Linkage")
+plot(hc.avg, main = "Average Linkage")
+plot(hc.sgl, main = "Single Linkage")
+```
+
+
+Complete and Average linkage appear to be roughly symmetrical causing them to be more balanced than the single method. Single linkage is also prone to chaining. 
+
+#### 2.
+
+```{r}
+
+
+clusters_comp <- cutree(hc.comp, k = 2)
+
+# Check the distribution of digits in each cluster
+table(clusters_comp,  c(rep(8, nrow(xtrain8)), rep(1, nrow(xtrain1))))
+```
+
+#### 3. 
+```{r}
+Z = rbind(pcout8$x, pcout1$x)[ , 1:3]
+z = scale(rbind(pcout8$x, pcout1$x)[ , 1:3])
+hc.comp <- hclust(dist(Z), method="complete")
+hc.avg <- hclust(dist(Z), method="average")
+hc.sgl <- hclust(dist(Z), method="single")
+
+par(mfrow = c(1, 3))
+plot(hc.comp, main = "Complete Linkage")
+plot(hc.avg, main = "Average Linkage")
+plot(hc.sgl, main = "Single Linkage")
+clusters_comp <- cutree(hc.comp, k = 2)
+
+# Check the distribution of digits in each cluster
+table(clusters_comp,  c(rep(8, nrow(xtrain8)), rep(1, nrow(xtrain1))))
+hc.comp <- hclust(dist(z), method="complete")
+hc.avg <- hclust(dist(z), method="average")
+hc.sgl <- hclust(dist(z), method="single")
+
+par(mfrow = c(1, 3))
+plot(hc.comp, main = "Complete Linkage")
+plot(hc.avg, main = "Average Linkage")
+plot(hc.sgl, main = "Single Linkage")
+clusters_comp <- cutree(hc.comp, k = 2)
+
+# Check the distribution of digits in each cluster
+table(clusters_comp,  c(rep(8, nrow(xtrain8)), rep(1, nrow(xtrain1))))
+
+
+```
+
+This approach does not yield better results compared to the X function. These two clusters are clustering all the data into one cluster. 
+
+#### 2.
+
+##### i)
+
+For X = rbind(xtrain8,xtrain1). The dissimilarity measure would be the squared euclidean distances. This is defined as the within-cluster variation for the kth cluster is the sum of all the pairwise squared Euclidean distances between the observations in the kth cluster. The objective is find the clustering that minimizes $\sum_{k=1}^{K} \frac{1}{\lvert C_k \rvert} \sum_{i, i' \in C_k} \sum_{j=1}^{p} (x_{ij} - x_{i'j})^2$. In this equation Ck is the number of observations in the kth cluster, x being every observations within the cluster
+
+##### ii)
+
+```{r}
+set.seed(13)  
+kmeans_result_X <- kmeans(X, centers = 2, nstart = 3)
+kmeans_result_Z <- kmeans(Z, centers = 2, nstart = 3)
+kmeans_result_z <- kmeans(z, centers = 2, nstart = 3)
+
+cluster_labels_X <- c(rep(8, nrow(xtrain8)), rep(1, nrow(xtrain1)))
+cluster_labels_Z <- c(rep(8, nrow(xtrain8)), rep(1, nrow(xtrain1)))
+cluster_labels_z <- c(rep(8, nrow(xtrain8)), rep(1, nrow(xtrain1)))
+
+# Create contingency tables
+table_X <- table(kmeans_result_X$cluster, cluster_labels_X)
+table_Z <- table(kmeans_result_Z$cluster, cluster_labels_Z)
+table_z <- table(kmeans_result_z$cluster, cluster_labels_z)
+
+# Print the contingency tables
+print("Contingency Table for kmeans_result_X:")
+print(table_X)
+
+print("Contingency Table for kmeans_result_Z:")
+print(table_Z)
+
+print("Contingency Table for kmeans_result_z:")
+print(table_z)
+```
+
+The 2 means approach that is better at identifying the cluster with the correct label is X because although the labels are incorrectly placed on the clusters, the clusters actually do a very good job at splitting the data up into correct groups. 
+
+### 4.
+
+#### 1.
+
+It computational there are 2^p possible models with p = 500, 2^500 possible models.
+
+#### 2. 
+Due to this high dimensional function, linear regression is not applicable because of the curse of dimensionality. In this case the number of predictors is much larger than the sample size of the training data. 
+
+#### 3. 
+
+```{r}
+
+# Load required library
+library(leaps)
+
+train.df <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/reg_train.csv")
+test.df <- read.csv("C:/Users/cools/OneDrive/Documents/R-Files/reg_test.csv")
+
+# Perform forward selection with varying nvmax
+nvmax_values <- 1:199
+test_mse <- numeric(length(nvmax_values))
+
+for (nvmax in nvmax_values) {
+  # Perform forward selection
+  model <- regsubsets(y ~ ., data = train.df, method = "forward", nvmax = nvmax)
+  sum <- summary(model)
+  minIndex <- which.min(sum$bic)
+  coefs <- coef(model, minIndex)
+  selectedVars <- names(coefs)[-1]
+  model <- lm(y ~ ., data = train.df[, c("y",selectedVars)])
+  y_pred <- predict(model, newdata = test.df[, -501])
+  test_mse[nvmax] <- mean((test.df$y - y_pred)^2)
+}
+
+# Find the index corresponding to the minimum test MSE
+best_model_index <- which.min(test_mse)
+best_nvmax <- nvmax_values[best_model_index]
+
+# Print the best model information
+cat("Best nvmax:", best_nvmax, "\n")
+cat("Test MSE for the best model:", test_mse[best_model_index], "\n")
+
+```
+
+Best nvmax: 6 
+Test MSE for the best model: 32753.8 
+
+#### 4.
+
+```{r}
+nvmax_values <- 1:199
+test_mse <- numeric(length(nvmax_values))
+
+for (nvmax in nvmax_values) {
+  model <- regsubsets(y ~ ., data = train.df, method = "backward", nvmax = nvmax)
+  sum <- summary(model)
+  minIndex <- which.min(sum$bic)
+  coefs <- coef(model, minIndex)
+  selectedVars <- names(coefs)[-1]
+  model <- lm(y ~ ., data = train.df[, c("y",selectedVars)])
+  y_pred <- predict(model, newdata = test.df[, -501])
+  test_mse[nvmax] <- mean((test.df$y - y_pred)^2)
+}
+
+# Find the index corresponding to the minimum test MSE
+best_model_index <- which.min(test_mse)
+best_nvmax <- nvmax_values[best_model_index]
+
+# Print the best model information
+cat("Best nvmax:", best_nvmax, "\n")
+cat("Test MSE for the best model:", test_mse[best_model_index], "\n")
+```
+
+Best nvmax: 18 
+Test MSE for the best model: 32252.6 
+
+#### 5. 
+
+Forward selection is more efficient in high dimensions. But backwards is better because it evaluates every variable, but this will take longer.
+
+#### 6.
+
+Ridge regression-   Minimize J(B) = $\sum_{i=1}^{n} \left(y_i - B_0 - \sum_{j=1}^{p} x_{ij}B_j\right)^2 + \lambda \sum_{j=1}^{p} B_j^2$
+
+Lasso-    Minimize J(B) =$\sum_{i=1}^{n} \left(y_i - B_0 - \sum_{j=1}^{p} x_{ij}B_j\right)^2 + \lambda \sum_{j=1}^{p} \lvert B_j \rvert$
+
+With an increase in lambda 
+
+#### 7.
+
+```{r}
+library(ISLR)
+library(leaps)
+library(glmnet)
+library(leaps)
+library(glmnet)
+num_folds <- 10
+row_indices <- 1:nrow(train.df)
+grid=10^seq(10,-2,length=100)
+folds <- vector("list", length = num_folds)
+cv_errors <- numeric(length = length(grid))
+for (j in seq_along(grid)) {
+  lambda <- grid[j]
+
+  # Initialize an empty vector to store fold-wise errors
+  fold_errors <- numeric(length = num_folds)
+
+for (i in 1:num_folds) {
+  fold_indices <- ((i - 1) * 20 + 1):(i * 20)
+  
+  train_set <- train.df[-fold_indices, ]
+  
+  validation_set <- train.df[fold_indices, ]
+
+  folds[[i]] <- row_indices[fold_indices]
+  ridge_model = glmnet(train_set[, -501], train_set$y, alpha = 0, lambda = lambda)
+  y_pred <- predict(ridge_model, newx = as.matrix(validation_set[, -501]))
+  fold_errors[i] <- mean((validation_set$y - y_pred)^2)
+}
+  cv_errors[j] <- mean(fold_errors)
+}
+optimal_lambda <- grid[which.min(cv_errors)]
+final_ridge_model <- glmnet(train_set[, -501], train_set$y, alpha = 0, lambda = optimal_lambda)
+non_zero_coef <- sum(coef(final_ridge_model, s = optimal_lambda) != 0)
+test_mse=mean((validation_set$y - y_pred)^2)
+
+
+
+# Print results
+cat("Optimal Lambda:", optimal_lambda, "\n")
+cat("Test MSE:", test_mse, "\n")
+cat("Number of non-zero coefficient estimates:", non_zero_coef, "\n")
+
+```
+
+#### 8.
+
+```{r}
+library(leaps)
+library(glmnet)
+num_folds <- 10
+row_indices <- 1:nrow(train.df)
+grid=10^seq(10,-2,length=100)
+folds <- vector("list", length = num_folds)
+cv_errors <- numeric(length = length(grid))
+for (j in seq_along(grid)) {
+  lambda <- grid[j]
+
+  # Initialize an empty vector to store fold-wise errors
+  fold_errors <- numeric(length = num_folds)
+
+for (i in 1:num_folds) {
+  fold_indices <- ((i - 1) * 20 + 1):(i * 20)
+  
+  train_set <- train.df[-fold_indices, ]
+  
+  validation_set <- train.df[fold_indices, ]
+
+  folds[[i]] <- row_indices[fold_indices]
+  ridge_model = glmnet(train_set[, -501], train_set$y, alpha = 1, lambda = lambda)
+  y_pred <- predict(ridge_model, newx = as.matrix(validation_set[, -501]))
+  fold_errors[i] <- mean((validation_set$y - y_pred)^2)
+}
+  cv_errors[j] <- mean(fold_errors)
+}
+optimal_lambda <- grid[which.min(cv_errors)]
+final_ridge_model <- glmnet(train_set[, -501], train_set$y, alpha = 1, lambda = optimal_lambda)
+test_mse <- mean((validation_set$y - y_pred)^2)
+non_zero_coef <- sum(coef(final_ridge_model, s = optimal_lambda) != 0)
+
+# Print results
+cat("Optimal Lambda:", optimal_lambda, "\n")
+cat("Test MSE:", test_mse, "\n")
+cat("Number of non-zero coefficient estimates:", non_zero_coef, "\n")
+```
+
+Lasso does better in this situation because it has the ability to set coefficients to zero, which is necessary in this situation with a large amount of predictors and a small sample size. 
+
+#### 9. 
+
+```{r}
+# Set seed for reproducibility
+library(pls)
+pcr_model <- pcr(train.df$y ~ ., data = train.df, scale = TRUE, validation = "CV")
+
+# Step 7: Print test MSE for all choices of M
+mse_values <- numeric(178)
+
+for (m in 1:178) {
+  y_pred <- predict(pcr_model, newdata = test.df[, -501], ncomp = m)
+  
+  # Step 6: Calculate test MSE for all choices of M
+  mse_values[m] <- mean((test.df$y - y_pred)^2)
+  
+}
+
+mse_values
+optimal_m <- which.min(mse_values)
+cat("Optimal M:", optimal_m, "\n")
+cat("Optimal M:", mse_values[optimal_m], "\n")
+plot(1:178, mse_values, type = "l", col = "blue", xlab = "Number of Components (M)", ylab = "Test MSE",
+     main = "PCR Model: MSE vs Number of Components")
+
+# Identify the optimal M with a red point
+points(optimal_m, mse_values[optimal_m], col = "red", pch = 19)
+text(optimal_m, mse_values[optimal_m], labels = paste("Optimal M =", optimal_m), pos = 4, col = "red")
+```
+
+With 178 being the largest possible M value with the current sample size, it is also the best model in terms of Test_MSE.
+#### 10. 
+```{r}
+# Set seed for reproducibility
+
+pcr_model <- plsr(train.df$y ~ ., data = train.df, scale = TRUE, validation = "CV")
+
+# Step 7: Print test MSE for all choices of M
+mse_values <- numeric(179)
+
+for (m in 1:179) {
+  y_pred <- predict(pcr_model, newdata = test.df[, -501], ncomp = m)
+  
+  # Step 6: Calculate test MSE for all choices of M
+  mse_values[m] <- mean((test.df$y - y_pred)^2)
+  
+}
+mse_values
+# Step 8: Choose optimal M
+optimal_m <- which.min(mse_values)
+cat("Optimal M:", optimal_m, "\n")
+cat("Optimal M:", mse_values[optimal_m], "\n")
+plot(1:179, mse_values, type = "l", col = "blue", xlab = "Number of Components (M)", ylab = "Test MSE",
+     main = "PLS Model: MSE vs Number of Components")
+
+# Identify the optimal M with a red point
+points(optimal_m, mse_values[optimal_m], col = "red", pch = 19)
+text(optimal_m, mse_values[optimal_m], labels = paste("Optimal M =", optimal_m), pos = 4, col = "red")
+```
+#### 11. 
+
+Forward Test MSE for the best model: 32753.8 - This model is likely suffering from a high bias as this model is likely under fit due to the forward step wise nature of it. 
+Backward Test MSE for the best model: 32252.6 - This model is likely suffering from high variance due to it having more predictors. 
+Ridge Test MSE: 34080.42 - Ridge regression adds a term that will regulate the coefficients adding a penalty. This may introduce bias if the predictors are being regulated, when they actually have a significant impact on the relationship. 
+Lasso Test MSE: 33984.36 - Lasso adds a similar penalty term to the regression but can cause predictors to be equal to zero. Like Ridge regression this may introduce some bias by removing significant predictors. 
+PCR Optimal M Test_MSE: 20742.17- PCR reduces variance by controlling multicollinearity, in a trade off it will introduce bias by reducing dimensionality. 
+PLS Optimal M Test_MSE: 21643.28- PLS is similar to PCR in the way that it reduces variance but might increase bias. 
+
+
+The best method for prediction is PCR because it achieves the lowest Test_mse. PCR successfully finds a good balance of bias-variance trade off. 
